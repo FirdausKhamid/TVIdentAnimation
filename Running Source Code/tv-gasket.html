@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en-US">
+
+<head>
+    <meta http-equiv="Content-Type" content="text/html;charset=utf-8">
+    <title>3D Sierpinski Gasket TV Ident</title>
+
+    <script id="vertex-shader" type="x-shader/x-vertex">
+    //=========initializing attributes===========//
+    attribute vec4 vColor;
+    attribute vec4 vPosition;
+    varying vec4 fColor;
+    uniform vec3 theta;
+    uniform float scale;
+    uniform vec2 trans;
+    //============================================//
+    void main() {
+        //convert angles from degree to radian form
+        vec3 angles = radians(theta);
+
+        vec3 c = cos(angles);
+        vec3 s = sin(angles);
+
+        mat4 rotationX = mat4(1.0, 0.0, 0.0, 0.0,
+                       0.0, c.x, s.x, 0.0,
+                       0.0, -s.x, c.x, 0.0,
+                       0.0, 0.0, 0.0, 1.0);
+
+        mat4 rotationY = mat4(c.y, 0.0, -s.y, 0.0,
+                       0.0, 1.0, 0.0, 0.0,
+                       s.y, 0.0, c.y, 0.0,
+                       0.0, 0.0, 0.0, 1.0);
+
+        mat4 rotationZ = mat4(c.z, s.z, 0.0, 0.0,
+                       -s.z, c.z, 0.0, 0.0,
+                       0.0, 0.0, 1.0, 0.0,
+                       0.0, 0.0, 0.0, 1.0);
+        
+        mat4 rotationMatrix = rotationZ * rotationY * rotationX;
+
+        mat4 scaleMatrix = mat4(scale, 0.0, 0.0, 0.0,
+                               0.0, scale, 0.0, 0.0,
+                               0.0, 0.0, scale, 0.0,
+                               0.0, 0.0, 0.0, 1.0);
+
+        mat4 transformMatrix = mat4(1.0, 0.0, 0.0, 0.0,
+                             0.0, 1.0, 0.0, 0.0,
+                             0.0, 0.0, 1.0, 0.0,
+                             trans[0], trans[1], 0.0, 1.0);
+
+        gl_Position = transformMatrix * scaleMatrix * rotationMatrix * vPosition;
+        fColor = vColor;
+    }
+    </script>
+
+    <script id="fragment-shader" type="x-shader/x-fragment">
+    precision mediump float;
+    varying vec4 fColor;
+
+    void main() {
+        gl_FragColor = fColor;
+    }
+
+    </script>
+    <script type="text/javascript" src="Common/webgl-utils.js"></script>
+    <script type="text/javascript" src="Common/initShaders.js"></script>
+    <script type="text/javascript" src="Common/MV.js"></script>
+    <script type="text/javascript" src="tv-ident.js"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <div>
+        <div id="menubox">
+            <p>Gasket Settings</p><br>
+            <!-- ==================== Color Picker Menu Settings ====================== -->
+            <div id="properties__container">
+                <label for="color1" class="cl">Colour 1</label>
+                <label for="color2" class="cl">Colour 2</label>
+                <label for="color3" class="cl">Colour 3</label>
+                <br>
+                <input type="color" id="c1" class="colorpicker" name="color1" value="#FF0000">
+                <input type="color" id="c2" class="colorpicker" name="color2" value="#00FF00">
+                <input type="color" id="c3" class="colorpicker" name="color3" value="#0000FF">
+            </div>
+            <!-- ======================================================================= -->
+
+            <!-- ======================== 3D Gasket Properties ========================= -->
+            <div id="properties__container">
+                <label for="division">Number of Subdivisions</label>
+                <input type="range" id="division" class="slider settings" name="division" min="1" max="5" step="1" value="1">
+                <input type="text" class="textbox" name="division" value="1" readonly><br>
+                <label class = "labelscale" for="scale">Scale</label>
+                <input type="range" id="scale" class="slider settings" name="scale" min="0.5" max="3" step="0.5"
+                    value="1">
+                <input type="text" class="textbox" name="scale" value="1" readonly><br>
+            </div>
+            <!-- ======================================================================= -->
+
+            <br>
+            <p>Animation Properties</p>
+            <br>
+
+            <!-- ======================== TV Ident Animation Properties ========================= -->
+            <div id="properties__container">
+
+                <!-- Speed -->
+                <label for="speed">Speed of Animation</label>
+                <input type="range" id="speed" class="slider settings" name="speed" min="100" max="800" step="100" value="100">
+                <input type="text" class="textbox" name="speed" value="100" readonly><br>
+                <!-- Scaling Factor -->
+                <label for="scaleFac">Scaling Factor</label>
+                <input type="range" id="scaleFac" class="slider settings" name="scaleFac" min="0.5" max="3" step="0.5"
+                    value="3">
+                <input type="text" class="textbox" name="scaleFac" value="3" readonly><br>
+
+                <!-- Rotation Angle -->
+                <label for="degree">Rotation Angle (Degrees)</label>
+                <input type="range" id="degree" class="slider settings" name="degree" min="0" max="360" step="10"
+                    value="180">
+                <input type="text" class="textbox" name="degree" value="180" readonly><br>
+                
+                <!-- Gasket Rotation Around X Axis -->
+                <label for="rotateX">Rotation on x-axis</label>
+                <input type="checkbox" id="rotateX" name="rotateX" checked /><br>
+
+                <!-- Gasket Rotation Around Y Axis -->
+                <label for="rotateY">Rotation on y-axis</label>
+                <input type="checkbox" id="rotateY" name="rotateY" checked /><br>
+                
+                <br>
+            </div>
+            <!-- Start and Restart Button -->
+            <input type="button" id="start-button" value="Start">
+            <input type="button" id="restart-button" value="Restart">
+        </div>
+        <!-- ========================================================================================= -->
+        
+        <canvas id="gl-canvas" width="512" height="512">
+            Oops ... your browser doesn't support the HTML5 canvas element
+        </canvas>
+    </div>
+</body>
+
+</html>
